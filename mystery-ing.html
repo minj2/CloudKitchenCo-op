@@ -65,30 +65,92 @@
             height: 100%;
         }
 
-        #tick {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background-color: #333;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            color: white;
-            font-weight: bold;
-            font-size: 22px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
+       /* Perfectly centered spin indicator */
+#tick {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background-color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
 
+/* White stem */
+#tick::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 40px;
+    background-color: white;
+    border-radius: 3px;
+}
+
+/* White triangle pointer on top of stem */
+#tick::after {
+    content: "";
+    position: absolute;
+    top: -65px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 30px solid white;
+}
+
+/* Blue overlay result card */
+#resultOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(36, 45, 64, 0.95);
+    color: #fff;
+    padding: 28px 36px;
+    border-radius: 20px;
+    font-size: 24px;
+    text-align: left;
+    line-height: 1.5;
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    z-index: 25;
+    max-width: 500px;
+    pointer-events: none;
+}
+#resultOverlay.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+#resultOverlay strong {
+    display: block;
+    font-size: 26px;
+    margin-bottom: 10px;
+    color: #f2a413;
+}
+#closeMsg {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #333;
+    display: none;
+    text-align: center;
+}
         button {
             margin: 10px;
             padding: 12px 24px;
             font-size: 18px;
-            background-color: #f2a413;
+            background-color: #242d40;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -116,8 +178,32 @@
             text-align: center;
             padding: 0 10px;
             z-index: 10;
+            #blurb {
+    /* Ingredient Blurb Box */
+#blurb {
+    position: absolute;
+    top: 10%;
+    right: 5%;
+    width: 280px;
+    max-width: 90%;
+    background: rgba(36, 45, 64, 0.95); /* deep blue from your palette */
+    color: #fff;
+    font-size: 18px;
+    line-height: 1.4;
+    padding: 20px 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    text-align: left;
+    z-index: 20;
+}
 
-        }
+#blurb.show {
+    opacity: 1;
+    transform: translateY(0);
+}
     </style>
 </head>
 
@@ -131,106 +217,122 @@
 
     <button id="spinBtn">Spin!</button>
     <div id="result"></div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/TweenMax.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/zarocknz/javascript-winwheel/Winwheel.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/zarocknz/javascript-winwheel/Winwheel.js"></script>
 
-    <script>
-        let wheel;
-        let spinBtn;
-        let resultDiv;
-        let isSpinning = false;
+<script>
+    let wheel, spinBtn, resultOverlay, closeMsg;
+    let isSpinning = false;
 
-        function setupWheel() {
-            const container = document.getElementById('wheelContainer');
-            const containerWidth = container.clientWidth;
+    // Mystery Mode text blurbs
+    const blurbs = {
+        "Pickle Juice": "Use at least one spoonful as an acid in a sauce, dressing, or glaze.",
+        "Instant Coffee": "Incorporate for flavour, not just as dust: Add to batter, rubs, or sauces.",
+        "Gummy Bears": "Keep their shape; no melting them into syrup: Uuse whole as garnish or mix-in.",
+        "Marshmallows": "Toast at least one piece: Pan, torch, or quick broil for flavor and texture.",
+        "Wasabi Peas": "Provide crunch and mild heat: Don’t overpower your dish with spice.",
+        "Anchovy Paste": "Dissolve fully into a base: Mention it in your recipe story or sauce description.",
+        "Boba Pearls": "Show them whole in a non-drink dish: Create texture contrast or visual surprise.",
+        "Blue Cheese": "Crumble or whip into a small component: Make it visible and bold.",
+        "Pretzels": "Must stay crunchy in the final dish: Use as a crust lattice, crumble, or breadstick.",
+        "Cheese Puffs": "Use the orange dust in one element and add at least three intact puffs on the plate.",
+        "Popcorn": "Keep it crisp when serving: Add last minute for fun texture.",
+        "Rice Cakes": "Use as a crisp base or crumble Avoid sogginess with a barrier or glaze.",
+        "Beef Jerky": "Rehydrate and mince into glaze or stuffing: Keep some visible strips for presentation.",
+        "Red Herring": "Not to be used as the main protein or flavour: A clever twist or minor garnish only."
+    };
 
-            const outerRadius = (containerWidth / 2) * 0.95;
+    function setupWheel() {
+        const container = document.getElementById('wheelContainer');
+        const containerWidth = container.clientWidth;
+        const outerRadius = (containerWidth / 2) * 0.95;
+        const canvas = document.getElementById('wheelCanvas');
+        canvas.width = containerWidth;
+        canvas.height = containerWidth;
 
-            const canvas = document.getElementById('wheelCanvas');
-            canvas.width = containerWidth;
-            canvas.height = containerWidth;
+        wheel = new Winwheel({
+            'canvasId': 'wheelCanvas',
+            'numSegments': 14,
+            'outerRadius': outerRadius,
+            'textFontSize': 18,
+            'textFontFamily': 'verdana',
+            'textFillStyle': 'white',
+            'textAlignment': 'center',
+            'textOrientation': 'horizontal',
+            'segments': [
+                { 'fillStyle': '#72a603', 'text': 'Pickle Juice' },
+                { 'fillStyle': '#f2a413', 'text': 'Instant Coffee' },
+                { 'fillStyle': '#72a603', 'text': 'Gummy Bears' },
+                { 'fillStyle': '#242D40', 'text': 'Marshmallows' },
+                { 'fillStyle': '#bf0404', 'text': 'Wasabi Peas' },
+                { 'fillStyle': '#f2a413', 'text': 'Anchovy Paste' },
+                { 'fillStyle': '#72a603', 'text': 'Boba Pearls' },
+                { 'fillStyle': '#242d40', 'text': 'Blue Cheese' },
+                { 'fillStyle': '#bf0404', 'text': 'Pretzels' },
+                { 'fillStyle': '#f2a413', 'text': 'Cheese Puffs' },
+                { 'fillStyle': '#72a603', 'text': 'Popcorn' },
+                { 'fillStyle': '#242d40', 'text': 'Rice Cakes' },
+                { 'fillStyle': '#f2a413', 'text': 'Beef Jerky' },
+                { 'fillStyle': '#bf0404', 'text': 'Red Herring' }
+            ],
+            'animation': {
+                'type': 'spinToStop',
+                'duration': 8,
+                'spins': 8,
+                'callbackFinished': showResult,
+                'easing': 'Power4.easeOut'
+            }
+        });
+    }
 
-            wheel = new Winwheel({
-                'canvasId': 'wheelCanvas',
-                'numSegments': 14,
-                'outerRadius': outerRadius,
-                'textFontSize': 18,
-                'textFontFamily': 'verdana',
-                'textFillStyle': 'white',
-                'textAlignment': 'center',
-                'textOrientation': 'horizontal',
-                'segments': [
-                    { 'fillStyle': '#72a603', 'text': 'Pickle Juice' },
-                    { 'fillStyle': '#f2a413', 'text': 'Instant Coffee' },
-                    { 'fillStyle': '#72a603', 'text': 'Gummy Bears' },
-                    { 'fillStyle': '#242D40', 'text': 'Marshmallows' },
-                    { 'fillStyle': '#bf0404', 'text': 'Wasabi Peas' },
-                    { 'fillStyle': '#f2a413', 'text': 'Anchovy Paste' },
-                    { 'fillStyle': '#72a603', 'text': 'Boba Pearls' },
-                    { 'fillStyle': '#242d40', 'text': 'Blue Cheese' },
-                    { 'fillStyle': '#bf0404', 'text': 'Pretzels' },
-                    { 'fillStyle': '#f2a413', 'text': 'Cheese Puffs' },
-                    { 'fillStyle': '#72a603', 'text': 'Popcorn' },
-                    { 'fillStyle': '#242d40', 'text': 'Rice Cakes' },
-                    { 'fillStyle': '#f2a413', 'text': 'Beef Jerky' },
-                    { 'fillStyle': '#bf0404', 'text': 'Red Herring' }
-                ],
-                'animation': {
-                    'type': 'spinToStop',
-                    'duration': 8,
-                    'spins': 8,
-                    'callbackFinished': showResult,
-                    'easing': 'Power4.easeOut'
-                },
-                'pins': {
-                    'number': 0
-                }
-            });
-        }
+    function spinWheel() {
+        if (isSpinning) return;
+        isSpinning = true;
+        spinBtn.disabled = true;
+        resultOverlay.classList.remove('show');
+        closeMsg.style.display = 'none';
 
-        function spinWheel() {
-            if (isSpinning) return;
+        wheel.stopAnimation(false);
+        wheel.rotationAngle = wheel.rotationAngle % 360;
+        const stopAt = Math.floor(Math.random() * 360);
+        wheel.animation.stopAngle = stopAt;
+        wheel.startAnimation();
+    }
 
-            isSpinning = true;
-            spinBtn.disabled = true;
-            resultDiv.textContent = 'Spinning...';
+    function showResult() {
+        const winningSegment = wheel.getIndicatedSegment();
+        const name = winningSegment.text;
+        const ruleText = blurbs[name] || "Get creative with your mystery ingredient!";
 
-            wheel.stopAnimation(false);
-            wheel.rotationAngle = wheel.rotationAngle % 360;
+        resultOverlay.innerHTML = `<strong>${name}</strong>${ruleText}`;
+        resultOverlay.classList.add('show');
 
-            const stopAt = Math.floor(Math.random() * 360);
-            wheel.animation.stopAngle = stopAt;
-            wheel.startAnimation();
-        }
+        spinBtn.textContent = 'Done';
+        spinBtn.disabled = false;
+        isSpinning = false;
 
-        function showResult() {
-            const winningSegment = wheel.getIndicatedSegment();
-            resultDiv.textContent = `You landed on: ${winningSegment.text}`;
-            spinBtn.disabled = false;
-            isSpinning = false;
-        }
+        closeMsg.style.display = 'block';
 
-        window.onload = function () {
-            spinBtn = document.getElementById('spinBtn');
-            resultDiv = document.getElementById('result');
+        // Update button behavior to close window
+        spinBtn.onclick = () => window.close();
+    }
 
-            setupWheel();
+    window.onload = function () {
+        spinBtn = document.getElementById('spinBtn');
 
-            spinBtn.addEventListener('click', spinWheel);
-        };
+        resultOverlay = document.createElement('div');
+        resultOverlay.id = 'resultOverlay';
+        document.body.appendChild(resultOverlay);
 
-        let resizeTimer;
-        window.onresize = function () {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (wheel) {
-                    wheel.clearCanvas();
-                }
-                setupWheel();
-            }, 250);
-        };
+        closeMsg = document.createElement('div');
+        closeMsg.id = 'closeMsg';
+        closeMsg.textContent = 'You may now close this window.';
+        document.body.appendChild(closeMsg);
 
+        setupWheel();
+        spinBtn.addEventListener('click', spinWheel);
+
+        // keep your vector-layer background
         const vectorLayer = document.getElementById('vectorLayer');
         const vectorImages = [
             'static/Vector-1.png',
@@ -238,47 +340,34 @@
             'static/Vector-3.png',
             'static/Vector-4.png',
             'static/Vector-5.png',
-            'static/Vector.png',
-    ];
-            // Function to place images evenly
-            function placeVectorsEvenly() {
-                const rows = 2; // 2 rows
-                const cols = 4; // 4 columns (2x4 grid for 8 images)
-                const imgWidth = 250;
-                const imgHeight = 250;
+            'static/Vector.png'
+        ];
 
-                let index = 0;
-
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        if (index >= vectorImages.length) break;
-
-                        const img = document.createElement('img');
-                        img.src = vectorImages[index];
-
-                        // Compute cell boundaries
-                        const cellWidth = window.innerWidth / cols;
-                        const cellHeight = window.innerHeight / rows;
-
-                        // Random position inside cell
-                        const top = r * cellHeight + Math.random() * (cellHeight - imgHeight);
-                        const left = c * cellWidth + Math.random() * (cellWidth - imgWidth);
-
-                        img.style.top = `${top}px`;
-                        img.style.left = `${left}px`;
-                        img.style.width = `${imgWidth}px`;
-                        img.style.height = `${imgHeight}px`;
-
-                        vectorLayer.appendChild(img);
-                        index++;
-                    }
+        function placeVectorsEvenly() {
+            const rows = 2, cols = 4;
+            const imgWidth = 250, imgHeight = 250;
+            let index = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (index >= vectorImages.length) break;
+                    const img = document.createElement('img');
+                    img.src = vectorImages[index];
+                    const cellWidth = window.innerWidth / cols;
+                    const cellHeight = window.innerHeight / rows;
+                    const top = r * cellHeight + Math.random() * (cellHeight - imgHeight);
+                    const left = c * cellWidth + Math.random() * (cellWidth - imgWidth);
+                    img.style.top = `${top}px`;
+                    img.style.left = `${left}px`;
+                    img.style.width = `${imgWidth}px`;
+                    img.style.height = `${imgHeight}px`;
+                    vectorLayer.appendChild(img);
+                    index++;
                 }
             }
-
+        }
         placeVectorsEvenly();
-
-    </script>
-
+    };
+</script>
 </body>
 
 </html>

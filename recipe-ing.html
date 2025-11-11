@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Spin for Your Recipe</title>
+    <title>Spin for Your Ingredients Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
     <style>
         html,
@@ -65,30 +65,92 @@
             height: 100%;
         }
 
-        #tick {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background-color: #333;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            color: white;
-            font-weight: bold;
-            font-size: 22px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
+       /* Perfectly centered spin indicator */
+       #tick {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background-color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
 
+/* White stem */
+#tick::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 40px;
+    background-color: white;
+    border-radius: 3px;
+}
+
+/* White triangle pointer on top of stem */
+#tick::after {
+    content: "";
+    position: absolute;
+    top: -65px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-bottom: 30px solid white;
+}
+
+/* Blue overlay result card */
+#resultOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(36, 45, 64, 0.95);
+    color: #fff;
+    padding: 28px 36px;
+    border-radius: 20px;
+    font-size: 24px;
+    text-align: left;
+    line-height: 1.5;
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    z-index: 25;
+    max-width: 500px;
+    pointer-events: none;
+}
+#resultOverlay.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+#resultOverlay strong {
+    display: block;
+    font-size: 26px;
+    margin-bottom: 10px;
+    color: #f2a413;
+}
+#closeMsg {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #333;
+    display: none;
+    text-align: center;
+}
         button {
             margin: 10px;
             padding: 12px 24px;
             font-size: 18px;
-            background-color: #f2a413;
+            background-color: #242d40;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -116,17 +178,56 @@
             text-align: center;
             padding: 0 10px;
             z-index: 10;
+            #blurb {
+     /* Blue overlay in center of wheel */
+     #resultOverlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(36, 45, 64, 0.95);
+            color: #fff;
+            padding: 28px 36px;
+            border-radius: 20px;
+            font-size: 22px;
+            text-align: left;
+            line-height: 1.5;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 25;
+            max-width: 500px;
+            pointer-events: none;
+        }
 
+        #resultOverlay.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #resultOverlay strong {
+            display: block;
+            font-size: 26px;
+            margin-bottom: 10px;
+            color: #f2a413;
+        }
+
+        #closeMsg {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+            display: none;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
     <div class="vector-layer" id="vectorLayer"></div>
-    <h1>Spin for Your Recipe</h1>
+    <h1>Spin for Your Ingredients Challenge</h1>
     <div id="wheelContainer">
         <canvas id="wheelCanvas" width="700" height="700"></canvas>
-        <div id="tick">▲</div>
+        <div id="tick"></div>
     </div>
 
     <button id="spinBtn">Spin!</button>
@@ -136,17 +237,24 @@
     <script src="https://cdn.jsdelivr.net/gh/zarocknz/javascript-winwheel/Winwheel.js"></script>
 
     <script>
-        let wheel;
-        let spinBtn;
-        let resultDiv;
+        let wheel, spinBtn, resultOverlay, closeMsg;
         let isSpinning = false;
+
+        // Challenge blurbs for each wheel segment
+        const blurbs = {
+            "3-4 Ingredients": "Focus on simplicity: Craft a dish with only 3–4 key ingredients that truly shine together.",
+            "1-2 Food Groups": "You may only use 1–2 food groups! Creativity counts! Make those choices count.",
+            "Skip 1 Food Group": "You must exclude one full food group: Find clever ways to balance your dish.",
+            "8-10 Ingredients": "You have a full pantry! Use 8–10 ingredients to layer bold, complex flavors.",
+            "All Food Groups": "Balance everything: Include representation from all major food groups in your dish.",
+            "5-7 Ingredients": "A sweet spot: use 5–7 ingredients for a balanced, flavourful creation.",
+            "3-4 Food Groups": "Build variety and nutrition: Include 3–4 different food groups in your dish."
+        };
 
         function setupWheel() {
             const container = document.getElementById('wheelContainer');
             const containerWidth = container.clientWidth;
-
             const outerRadius = (containerWidth / 2) * 0.95;
-
             const canvas = document.getElementById('wheelCanvas');
             canvas.width = containerWidth;
             canvas.height = containerWidth;
@@ -176,9 +284,7 @@
                     'callbackFinished': showResult,
                     'easing': 'Power4.easeOut'
                 },
-                'pins': {
-                    'number': 0
-                }
+                'pins': { 'number': 0 }
             });
         }
 
@@ -187,7 +293,7 @@
 
             isSpinning = true;
             spinBtn.disabled = true;
-            resultDiv.textContent = 'Spinning...';
+            resultOverlay.classList.remove('show');
 
             wheel.stopAnimation(false);
             wheel.rotationAngle = wheel.rotationAngle % 360;
@@ -199,77 +305,69 @@
 
         function showResult() {
             const winningSegment = wheel.getIndicatedSegment();
-            resultDiv.textContent = `You landed on: ${winningSegment.text}`;
+            const name = winningSegment.text;
+            const ruleText = blurbs[name] || "Use your creativity for this challenge!";
+            resultOverlay.innerHTML = `<strong>${name}</strong>${ruleText}`;
+            resultOverlay.classList.add('show');
+
+            spinBtn.textContent = 'Done';
             spinBtn.disabled = false;
             isSpinning = false;
+            closeMsg.style.display = 'block';
+
+            spinBtn.onclick = () => window.close();
         }
 
         window.onload = function () {
             spinBtn = document.getElementById('spinBtn');
-            resultDiv = document.getElementById('result');
+            resultOverlay = document.createElement('div');
+            resultOverlay.id = 'resultOverlay';
+            document.body.appendChild(resultOverlay);
+
+            closeMsg = document.createElement('div');
+            closeMsg.id = 'closeMsg';
+            closeMsg.textContent = 'You may now close this window.';
+            document.body.appendChild(closeMsg);
 
             setupWheel();
-
             spinBtn.addEventListener('click', spinWheel);
-        };
 
-        let resizeTimer;
-        window.onresize = function () {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (wheel) {
-                    wheel.clearCanvas();
-                }
-                setupWheel();
-            }, 250);
-        };
-        const vectorLayer = document.getElementById('vectorLayer');
-        const vectorImages = [
-            'static/Vector-1.png',
-            'static/Vector-2.png',
-            'static/Vector-3.png',
-            'static/Vector-4.png',
-            'static/Vector-5.png',
-            'static/Vector.png',
-    ];
-            // Function to place images evenly
+            // Background vector setup
+            const vectorLayer = document.getElementById('vectorLayer');
+            const vectorImages = [
+                'static/Vector-1.png',
+                'static/Vector-2.png',
+                'static/Vector-3.png',
+                'static/Vector-4.png',
+                'static/Vector-5.png',
+                'static/Vector.png'
+            ];
+
             function placeVectorsEvenly() {
-                const rows = 2; // 2 rows
-                const cols = 4; // 4 columns (2x4 grid for 8 images)
-                const imgWidth = 250;
-                const imgHeight = 250;
-
+                const rows = 2, cols = 4;
+                const imgWidth = 250, imgHeight = 250;
                 let index = 0;
-
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         if (index >= vectorImages.length) break;
-
                         const img = document.createElement('img');
                         img.src = vectorImages[index];
-
-                        // Compute cell boundaries
                         const cellWidth = window.innerWidth / cols;
                         const cellHeight = window.innerHeight / rows;
-
-                        // Random position inside cell
                         const top = r * cellHeight + Math.random() * (cellHeight - imgHeight);
                         const left = c * cellWidth + Math.random() * (cellWidth - imgWidth);
-
                         img.style.top = `${top}px`;
                         img.style.left = `${left}px`;
                         img.style.width = `${imgWidth}px`;
                         img.style.height = `${imgHeight}px`;
-
                         vectorLayer.appendChild(img);
                         index++;
                     }
                 }
             }
-
-        placeVectorsEvenly();
+            placeVectorsEvenly();
+        };
     </script>
-
 </body>
 
 </html>
