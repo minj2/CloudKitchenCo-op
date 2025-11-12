@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Spin for Your Mystery Ingredient Challenge</title>
+    <title>Spin for Your Mystery Ingredient</title>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
     <style>
         html,
@@ -145,6 +145,7 @@
     color: #333;
     display: none;
     text-align: center;
+    z-index: 10;
 }
         button {
             margin: 10px;
@@ -209,7 +210,7 @@
 
 <body>
     <div class="vector-layer" id="vectorLayer"></div>
-    <h1>Spin for Your Mystery Ingredient Challenge</h1>
+    <h1>Spin for Your Mystery Ingredient</h1>
     <div id="wheelContainer">
         <canvas id="wheelCanvas" width="700" height="700"></canvas>
         <div id="tick">▲</div>
@@ -228,7 +229,7 @@
     const blurbs = {
         "Pickle Juice": "Use at least one spoonful as an acid in a sauce, dressing, or glaze.",
         "Instant Coffee": "Incorporate for flavour, not just as dust: Add to batter, rubs, or sauces.",
-        "Gummy Bears": "Keep their shape! No melting them into syrup: Use whole as garnish or mix-in.",
+        "Gummy Bears": "Keep their shape; no melting them into syrup: Uuse whole as garnish or mix-in.",
         "Marshmallows": "Toast at least one piece: Pan, torch, or quick broil for flavor and texture.",
         "Wasabi Peas": "Provide crunch and mild heat: Don’t overpower your dish with spice.",
         "Anchovy Paste": "Dissolve fully into a base: Mention it in your recipe story or sauce description.",
@@ -261,18 +262,18 @@
             'textOrientation': 'horizontal',
             'segments': [
                 { 'fillStyle': '#72a603', 'text': 'Pickle Juice' },
-                { 'fillStyle': '#f2a413', 'text': 'Instant Coffee' },
+                { 'fillStyle': '#D93D04', 'text': 'Instant Coffee' },
                 { 'fillStyle': '#72a603', 'text': 'Gummy Bears' },
                 { 'fillStyle': '#242D40', 'text': 'Marshmallows' },
                 { 'fillStyle': '#bf0404', 'text': 'Wasabi Peas' },
-                { 'fillStyle': '#f2a413', 'text': 'Anchovy Paste' },
+                { 'fillStyle': '#D93D04', 'text': 'Anchovy Paste' },
                 { 'fillStyle': '#72a603', 'text': 'Boba Pearls' },
                 { 'fillStyle': '#242d40', 'text': 'Blue Cheese' },
                 { 'fillStyle': '#bf0404', 'text': 'Pretzels' },
-                { 'fillStyle': '#f2a413', 'text': 'Cheese Puffs' },
+                { 'fillStyle': '#D93D04', 'text': 'Cheese Puffs' },
                 { 'fillStyle': '#72a603', 'text': 'Popcorn' },
                 { 'fillStyle': '#242d40', 'text': 'Rice Cakes' },
-                { 'fillStyle': '#f2a413', 'text': 'Beef Jerky' },
+                { 'fillStyle': '#D93D04', 'text': 'Beef Jerky' },
                 { 'fillStyle': '#bf0404', 'text': 'Red Herring' }
             ],
             'animation': {
